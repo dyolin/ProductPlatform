@@ -23,9 +23,9 @@ public class ProductImportScheduler {
     }
 
     // Run every 2 minutes
-    @Scheduled(fixedDelay = 120000, initialDelay = 120000)
+    @Scheduled(cron = "${report.scheduler.cron}")
     public void importEveryTwoMinutes() {
-        log.info("Starting scheduled smartphone product import...");
+        log.info("Starting scheduled smartphone product import on thread: {}", Thread.currentThread().getName());
         runImport();
     }
 

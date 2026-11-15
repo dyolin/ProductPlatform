@@ -21,17 +21,23 @@ public class ProductImportService {
     private final DummyJsonClient dummyJsonClient;
     private final ProductClient productClient;
 
-    public void importSmartphones() {
+    private static final int BATCH_SIZE = 5;
+    private int nextSkip = 0;
 
-        // 1. Fetch smartphone products from DummyJSON
-        DummyJsonResponse response = dummyJsonClient.getSmartphones();
+    public synchronized void importSmartphones() {
+
+        log.info("Get smartphones with limit={}, skip={}", BATCH_SIZE, nextSkip);
+
+        // 1. Get smartphone product dari DummyJSON
+        DummyJsonResponse response = dummyJsonClient.getSmartphones(BATCH_SIZE, nextSkip);
 
         if (response == null || response.getProducts() == null) {
             log.warn("No products received from DummyJSON");
+            nextSkip = 0;
             return;
         }
 
-        // 2. Convert DummyJSON DTOs into Product Service request DTOs
+        // 2. Convert DummyJSON DTO ke Product Service request DTO
         List<ProductImportRequest> products = new ArrayList<>();
 
         for (DummyJsonProductResponse item : response.getProducts()) {
@@ -52,9 +58,17 @@ public class ProductImportService {
             products.add(request);
         }
 
-        // 3. Send products to Product Service through Feign
+        // 3. Send products ke Product Service dengan Feign
         productClient.importProducts(products);
 
-        log.info("Successfully sent {} smartphone products to Product Service", products.size());
+        //next kalau product-service sudah dapat
+        nextSkip += response.getProducts().size();
+
+        // End data, ulang lagi dari awal
+        if (nextSkip >= response.getTotal()) {
+            nextSkip = 0;
+        }
+
+        log.info("Successfully sent {} smartphone products to Product Service. Next skip is {}", products.size(), nextSkip);
     }
 }
