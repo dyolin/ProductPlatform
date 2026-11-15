@@ -12,6 +12,8 @@ import com.example.product_service.service.ProductService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -41,6 +43,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value = "byId", key = "#id")
     public ProductResponse getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + id));
@@ -63,6 +66,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(value = "byId", key = "#id")
     public ProductResponse updateProduct(Long id, ProductRequest request) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + id));
@@ -75,6 +79,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(value = "byId", key = "#id")
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + id));
@@ -95,13 +100,13 @@ public class ProductServiceImpl implements ProductService {
 
         for (ProductImportRequest request : products) {
 
-            // Reject products with rating below 3 or missing rating
+            // Reject products rating < 3 || rating null
             if (request.getRating() == null || request.getRating().compareTo(BigDecimal.valueOf(3)) < 0) {
                 rejected++;
                 continue;
             }
 
-            // Skip products that have already been imported
+            // Skip products yang sudah diimport
             if (request.getDummyJsonId() == null || productRepository.existsByDummyJsonId(request.getDummyJsonId())) {
                 skipped++;
                 continue;
