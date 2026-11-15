@@ -178,18 +178,11 @@ Pada `importProducts`, id dari DummyJson akan disimpan juga ke dalam database be
 Data yang diterima oleh Product Service akan dicek terlebih dulu apakah di dalam tabel mst_product sudah memiliki data dengan dummyJsonId yang sama.
 Apabila data tersebut ditemukan, maka data double tersebut tidak akan dimasukkan lagi ke dalam database.
 
-### 4. Using Eureka for Service Discovery
+### 4. Using Pagination for DummyJson Limit
 
-Eureka memberikan fasilitas bagi service-service yang tidak saling terkait untuk bisa saling berkomunikasi. Karena aplikasi terdiri dari beberapa independent service yang butuh untuk saling berkomunikasi, misalnya Scheduler Service dan Product Service.
-Dengan Eureka, service bisa saling berkomunikasi dengan menggunakan nama service yang dituju dan telah terdaftar ke Eureka, sehingga tidak perlu untuk menuliskan path dan port setiap service.
-Untuk skala yang lebih besar, melalui Eureka, service bisa memiliki entitas lebih dari satu. Hal ini akan membantu apabila task yang perlu dikerjakan oleh aplikasi banyak dan dalam jumlah yang besar.
+Saat request untuk mengambil data dari DummyJson, diberikan param limit dan skip. Limit memberikan nilai maksimum dari data yang diambil dalam satu batch. Skip digunakan untuk menentukan jumlah products yang akan diskip sebelum diambil agar mengambil data 5 selanjutnya. Apabila nilai skip sudah sama dengan total data, maka nilai skip akan diulang lagi dari awal untuk batch selanjutnya. `synchronized` digunakan untuk mencegah dua thread menjalankan method `importSmartphones()` bersamaan sehingga nilai `nextskip` menjadi tidak tepat.
 
-### 5. Using API Gateway for Authentication and Routing
-
-Validasi JWT Token di Gateway membantu agar setiap service tidak perlu mengimplementasi JWT Filter yang sama. Dengan API Gateway juga sudah menyimpan user credentials berupa username di dalam header request, service lain yang membutuhkan pengecekan identitas pengguna dapat langsung mengambil melalui header `X-User-Id`.
-API Gateway juga menyediakan jalur masuk yang sama yaitu `http://localhost:8084` meskipun sebenarnya service lain berjalan di port yang berbeda-beda.
-
-### 6. Using Synchronous Feign Communication for Product Import
+### 5. Using Synchronous Feign Communication for Product Import
 
 Synchronous process dipilih karena terdapat proses sequensial yang terjadi dari API pihak ketiga. Hasil dari data products yang diimport dari DummyJson akan digunakan kembali untuk dimapping ke products. Lalu dikirim ke Product Service.
 Karena data yang diambil hanya 5 data dalam sekali request dan scheduler juga dijadwalkan untuk berjalan setiap 2 menit, maka proses synchronous sudah cukup memenuhi kebutuhan sistem dan jadi lebih mudah untuk di-maintain.
