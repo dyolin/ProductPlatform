@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: auth-service
+
+  #configurasi database
+  datasource:
+    url: jdbc:postgresql://localhost:5432/auth_platform
+    username: postgres
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+server:
+  port: 8081
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 3600000
