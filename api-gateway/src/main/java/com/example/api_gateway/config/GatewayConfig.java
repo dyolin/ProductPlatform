@@ -22,6 +22,10 @@ public class GatewayConfig {
                         .path("/product/**")
                         .filters(f -> f.addRequestHeader("X-Source", "gateway"))
                         .uri("lb://product-service"))
+                .route("scheduler-route", r -> r
+                        .path("/scheduler/**")
+                        .filters(f -> f.addRequestHeader("X-Source", "gateway"))
+                        .uri("lb://scheduler-service"))
                 .build();
     }
 }
