@@ -14,6 +14,11 @@ import java.util.List;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(ProductAlreadyExistsException.class)
+    public ResponseEntity<BaseResponse<Object>> handleProductAlreadyExists (ProductAlreadyExistsException exception){
+        return build(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
     @ExceptionHandler(ProductNotFoundException.class)
     public ResponseEntity<BaseResponse<Object>> handleProductNotFound (ProductNotFoundException exception){
         return build(HttpStatus.NOT_FOUND, exception.getMessage());

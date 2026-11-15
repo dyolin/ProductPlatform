@@ -3,6 +3,7 @@ package com.example.product_service.service.impl;
 import com.example.product_service.dto.request.ProductRequest;
 import com.example.product_service.dto.response.ProductResponse;
 import com.example.product_service.entity.Product;
+import com.example.product_service.exception.ProductAlreadyExistsException;
 import com.example.product_service.exception.ProductNotFoundException;
 import com.example.product_service.repository.ProductRepository;
 import com.example.product_service.service.ProductService;
@@ -21,6 +22,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse createProduct(ProductRequest request) {
+        if (productRepository.existsByTitleIgnoreCase(request.getTitle())) {
+            throw new ProductAlreadyExistsException(
+                    "Product with name '" + request.getTitle() + "' already exists"
+            );
+        }
+
         Product product = new Product();
         mapRequestToEntity(request, product);
 

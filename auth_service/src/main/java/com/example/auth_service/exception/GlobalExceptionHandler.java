@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DuplicateUsernameException.class)
     public ResponseEntity<BaseResponse<Object>> handleDuplicateUsername (DuplicateUsernameException exception){
-        return build(HttpStatus.BAD_REQUEST, exception.getMessage());
+        return build(HttpStatus.CONFLICT, exception.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
