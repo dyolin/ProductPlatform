@@ -1,16 +1,20 @@
 package com.example.product_service.service.impl;
 
+import com.example.product_service.dto.request.ProductImportRequest;
 import com.example.product_service.dto.request.ProductRequest;
+import com.example.product_service.dto.response.ProductImportResponse;
 import com.example.product_service.dto.response.ProductResponse;
 import com.example.product_service.entity.Product;
 import com.example.product_service.exception.ProductAlreadyExistsException;
 import com.example.product_service.exception.ProductNotFoundException;
 import com.example.product_service.repository.ProductRepository;
 import com.example.product_service.service.ProductService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,6 +80,58 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + id));
 
         productRepository.delete(product);
+    }
+
+    //dummyJSON
+    @Override
+    @Transactional
+    public ProductImportResponse importProducts(List<ProductImportRequest> products) {
+
+        int imported = 0;
+        int rejected = 0;
+        int skipped = 0;
+
+        List<Product> productsToSave = new ArrayList<>();
+
+        for (ProductImportRequest request : products) {
+
+            // Reject products with rating below 3 or missing rating
+            if (request.getRating() == null || request.getRating().compareTo(BigDecimal.valueOf(3)) < 0) {
+                rejected++;
+                continue;
+            }
+
+            // Skip products that have already been imported
+            if (request.getDummyJsonId() == null || productRepository.existsByDummyJsonId(request.getDummyJsonId())) {
+                skipped++;
+                continue;
+            }
+
+            Product product = new Product();
+
+            product.setDummyJsonId(request.getDummyJsonId());
+            product.setTitle(request.getTitle());
+            product.setDescription(request.getDescription());
+            product.setCategory(request.getCategory());
+            product.setBrand(request.getBrand());
+            product.setPrice(request.getPrice());
+            product.setDiscountPercentage(request.getDiscountPercentage());
+            product.setRating(request.getRating());
+            product.setStock(request.getStock());
+            product.setThumbnail(request.getThumbnail());
+
+            productsToSave.add(product);
+            imported++;
+        }
+
+        productRepository.saveAll(productsToSave);
+
+        return new ProductImportResponse(
+                products.size(),
+                imported,
+                rejected,
+                skipped
+        );
     }
 
     private void mapRequestToEntity(ProductRequest request, Product product) {
